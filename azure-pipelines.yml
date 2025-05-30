@@ -28,4 +28,23 @@ stages:
         command: push
         tags: |
           $(imageName):latest
-    
+- stage: Deploy
+  displayName: docker image deploy
+  dependsOn: BuildAndPush
+  jobs:
+  - job: Deploy
+    displayName: deploy docker image
+    steps:
+    - task: SSH@0
+      displayName: deploy via ssh
+      inputs:
+        sshEndpoint: 'MySSHConnection'
+        runOptions: 'commands'
+        commands: |
+          docker login -u $(username) -p $(password)
+          docker pull $(imageName):latest
+          docker stop devops-mini-project3 || true
+          docker rm devops-mini-project3 || true
+          docker run -d -p 3000:3000 --name devops-mini-project3 $(imageName):latest
+
+          
